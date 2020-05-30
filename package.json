@@ -37,7 +37,7 @@
     "prepublishOnly": "npm run preversion"
   },
   "devDependencies": {
-    "@types/jest": "25.2.1",
+    "@types/jest": "25.2.3",
     "@types/node": "13.13.9",
     "@types/type-detect": "4.0.1",
     "jest": "26.0.0",
