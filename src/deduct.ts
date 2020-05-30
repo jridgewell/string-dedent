@@ -1,4 +1,3 @@
-// TODO: Test type of args
 type Tag<A extends any[], R, T> = (
   this: T,
   strings: TemplateStringsArray,
@@ -11,16 +10,16 @@ const leadingWhitespace = /^\s*/;
 
 function deduct(str: string): string;
 function deduct(str: TemplateStringsArray, ...substitutions: unknown[]): string;
-function deduct<A extends any[], R, T>(tag: Tag<A , R, T>): Tag<A, R, T>;
+function deduct<A extends any[], R, T>(tag: Tag<A, R, T>): Tag<A, R, T>;
 function deduct<A extends any[], R, T>(
   arg: string | TemplateStringsArray | Tag<A, R, T>,
 ): string | Tag<A, R, T> {
   if (typeof arg === 'string') {
-    return process([arg])[0]!;
+    return process([arg])[0];
   }
 
   if (typeof arg === 'function') {
-    return function(
+    return function (
       this: T,
       strings: TemplateStringsArray,
       ...substitutions: any[]
@@ -66,6 +65,7 @@ function processTemplateStringsArray(
   return deducted;
 }
 
+function process(strings: readonly string[]): readonly string[];
 function process(
   strings: readonly (string | undefined)[],
 ): readonly (string | undefined)[] {

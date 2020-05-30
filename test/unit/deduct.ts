@@ -200,7 +200,7 @@ describe('wraps tagged template (cooked)', () => {
 
   it('calls wrapped tag with this context', () => {
     const o = {
-      dd: dd(function(this: unknown) {
+      dd: dd(function (this: unknown) {
         return this;
       }),
     };
