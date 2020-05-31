@@ -100,17 +100,13 @@ function process(
         matched.length === line.length &&
         (j + 1 < lines.length || i + 1 === splits.length)
       ) {
+        lines[j] = '';
         continue;
       }
       if (minMatch === undefined) {
         minMatch = matched;
       } else {
-        let k = 0;
-        const length = Math.min(minMatch.length, matched.length);
-        for (; k < length; k++) {
-          if (minMatch[k] !== matched[k]) break;
-        }
-        minMatch = minMatch.slice(0, k);
+        minMatch = inCommon(minMatch, matched);
       }
     }
   }
@@ -120,12 +116,7 @@ function process(
   // It only counts if this line was directly before a newline, not an
   // expression
   if (firstSplit && firstSplit.length > 1) {
-    const first = firstSplit[0];
-    const leading = leadingWhitespace.exec(first)!;
-    if (leading[0].length === first.length) {
-      firstSplit[0] = '';
-      firstSplit[1] = '';
-    }
+    if (firstSplit[0] === '') firstSplit[1] = '';
   }
 
   // Strip the last line if it's all whitespace
@@ -133,12 +124,7 @@ function process(
   // It only counts if this line was directly after a newline, not an expression
   if (lastSplit && lastSplit.length > 1) {
     const lastIndex = lastSplit.length - 1;
-    const last = lastSplit[lastIndex];
-    const leading = leadingWhitespace.exec(last)!;
-    if (leading[0].length === last.length) {
-      lastSplit[lastIndex - 1] = '';
-      lastSplit[lastIndex] = '';
-    }
+    if (lastSplit[lastIndex] === '') lastSplit[lastIndex - 1] = '';
   }
 
   const min = minMatch ? minMatch.length : 0;
@@ -158,6 +144,15 @@ function process(
 
     return quasi;
   });
+}
+
+function inCommon(a: string, b: string): string {
+  const length = Math.min(a.length, b.length);
+  let i = 0;
+  for (; i < length; i++) {
+    if (a[i] !== b[i]) break;
+  }
+  return a.slice(0, i);
 }
 
 export default dedent;
