@@ -1,4 +1,4 @@
-type Tag<A extends any[], R, T> = (
+type Tag<A extends unknown[], R, T> = (
   this: T,
   strings: TemplateStringsArray,
   ...substitutions: A
@@ -10,8 +10,8 @@ const leadingWhitespace = /^\s*/;
 
 function dedent(str: string): string;
 function dedent(str: TemplateStringsArray, ...substitutions: unknown[]): string;
-function dedent<A extends any[], R, T>(tag: Tag<A, R, T>): Tag<A, R, T>;
-function dedent<A extends any[], R, T>(
+function dedent<A extends unknown[], R, T>(tag: Tag<A, R, T>): Tag<A, R, T>;
+function dedent<A extends unknown[], R, T>(
   arg: string | TemplateStringsArray | Tag<A, R, T>,
 ): string | Tag<A, R, T> {
   if (typeof arg === 'string') {
@@ -22,9 +22,9 @@ function dedent<A extends any[], R, T>(
     return function (
       this: T,
       strings: TemplateStringsArray,
-      ...substitutions: any[]
+      ...substitutions: A
     ): R {
-      // tslint:disable-next-line no-unsafe-any
+      // tslint:disable-next-line no-unsafe-any no-any
       return (arg as any).call(
         this,
         processTemplateStringsArray(strings),

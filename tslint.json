@@ -7,7 +7,7 @@
     "exclude": [ "dist" ]
   },
   "rules": {
-    "no-any": false,
+    "no-any": true,
     "no-unsafe-any": true,
     "ordered-imports": true,
     "object-literal-sort-keys": true,
