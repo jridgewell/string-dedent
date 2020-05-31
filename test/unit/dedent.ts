@@ -244,6 +244,40 @@ describe('wraps tagged template (cooked)', () => {
     expect(o.dd`test`).toBe(o);
   });
 
+  it('preserves call signature of wrapped tag', () => {
+    const tag = (
+      strings: TemplateStringsArray,
+      a: number,
+      b: string,
+    ): string => {
+      return a + b;
+    };
+    const wrapped = dd(tag);
+    const strings = ((s: TemplateStringsArray, ...args: unknown[]) => s)`
+      abc${0}def${'ghi'}jkl
+    `;
+
+    // Correct call signature
+    wrapped(strings, 1, 'test');
+
+    // @ts-expect-error
+    wrapped(strings, 'test', 'test');
+    // @ts-expect-error
+    wrapped(strings, 1, 1);
+    // @ts-expect-error
+    wrapped(strings, 1, 'test', null);
+    // @ts-expect-error
+    const x: number = wrapped(strings, 1, 'test');
+    ((x: number) => {})(x); // use x
+
+    const contextWrapped = dd(function (
+      this: {},
+      strings: TemplateStringsArray,
+    ): void {});
+    // @ts-expect-error
+    contextWrapped(strings);
+  });
+
   it.each([
     // No substitutions
     // No line breaks
