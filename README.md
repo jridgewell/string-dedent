@@ -92,5 +92,3 @@ console.log(dedent(str));
 Used as a function
 */
 ```
-
-

@@ -1,6 +1,6 @@
-type Tag<R> = (strings: TemplateStringsArray, ...substitutions: any[]) => R;
-
 import dd from '../../src/dedent';
+
+type Tag<R> = (strings: TemplateStringsArray, ...substitutions: any[]) => R;
 
 function cooked(strings: TemplateStringsArray, ...substitutions: any[]): string;
 function cooked(strings: TemplateStringsArray): string {
@@ -93,6 +93,10 @@ it.each([
   [`test   \ntest`, 'test   \ntest'],
   [`test\ntest   `, 'test\ntest   '],
   [`test   \ntest   `, 'test   \ntest   '],
+  // Different leading whitespace chars
+  ['  spaces\n \tspace tab', ' spaces\n\tspace tab'],
+  ['     spaces\n \tspace tab', '    spaces\n\tspace tab'],
+  ['  spaces\n\t\tspace tab', '  spaces\n\t\tspace tab'],
 ])(
   'called as function ({ index: %#, input: ```%s```, expected: ```%s``` })',
   (input: string, expected: string) => {

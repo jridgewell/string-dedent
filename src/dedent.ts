@@ -79,7 +79,7 @@ function process(
     return quasi === undefined ? quasi : quasi.split(newline);
   });
 
-  let min = Infinity;
+  let minMatch;
   for (let i = 0; i < splits.length; i++) {
     const lines = splits[i];
     if (lines === undefined) continue;
@@ -93,16 +93,25 @@ function process(
       const line = lines[j];
       const leading = leadingWhitespace.exec(line)!;
 
-      const matchLength = leading[0].length;
+      const matched = leading[0];
       // Do not count the line if it's all whitespace and directly before a
       // newline (or the very last line), not an expression.
       if (
-        matchLength === line.length &&
+        matched.length === line.length &&
         (j + 1 < lines.length || i + 1 === splits.length)
       ) {
         continue;
       }
-      if (matchLength < min) min = matchLength;
+      if (minMatch === undefined) {
+        minMatch = matched;
+      } else {
+        let k = 0;
+        const length = Math.min(minMatch.length, matched.length);
+        for (; k < length; k++) {
+          if (minMatch[k] !== matched[k]) break;
+        }
+        minMatch = minMatch.slice(0, k);
+      }
     }
   }
 
@@ -132,6 +141,7 @@ function process(
     }
   }
 
+  const min = minMatch ? minMatch.length : 0;
   return splits.map((lines: string[] | undefined, i: number):
     | string
     | undefined => {
