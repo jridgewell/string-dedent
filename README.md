@@ -52,7 +52,7 @@ console.log(dedent`
   
   Only whitespace that appears here inside the tagged template literal
   will be dedented.
-  ${threeSpaces}<- that whitespace will not be removed
+  ${threeSpaces}<- expression whitespace will not be removed
 `);
 
 /*
@@ -60,7 +60,7 @@ This supports expressions as you would expect.
   
 Only whitespace that appears here inside the tagged template literal
 will be dedented.
-   <- that whitespace will not be removed
+   <- expression whitespace will not be removed
 */
 ```
 
@@ -73,7 +73,7 @@ render(container, html`
   <div>The leading whitespace before this div tag will create a Text node in the output...</div>
 `);
 
-// Wrapped html usage
+// Wrapped html usage:
 const html = dedent(require('lit-html'));
 render(container, html`
   <div>Leading whitespace before this div tag will not make it to HTML</div>
