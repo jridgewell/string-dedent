@@ -9,7 +9,7 @@ function common(esm) {
     input: 'src/dedent.ts',
     output: esm
       ? { file: pkg.module, format: 'es', sourcemap: true }
-      : { file: pkg.main, name: 'overPromise', format: 'umd', sourcemap: true },
+      : { file: pkg.main, name: 'dedent', format: 'umd', sourcemap: true },
     plugins: [
       // Compile TypeScript files
       typescript(esm ? {} : { target: 'ES5' }),
