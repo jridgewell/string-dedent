@@ -1,22 +1,25 @@
 {
-  "name": "deduct",
+  "name": "string-dedent",
   "version": "0.1.0",
-  "description": "",
-  "keywords": [],
-  "main": "dist/deduct.umd.js",
-  "module": "dist/deduct.mjs",
-  "typings": "dist/types/deduct.d.ts",
+  "description": "De-indents (dedents) passed in strings",
+  "keywords": [
+    "string",
+    "dedent"
+  ],
+  "main": "dist/dedent.umd.js",
+  "module": "dist/dedent.mjs",
+  "typings": "dist/types/dedent.d.ts",
   "files": [
     "dist"
   ],
   "author": "Justin Ridgewell <justin@ridgewell.name>",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jridgewell/deduct.git"
+    "url": "git+https://github.com/jridgewell/string-dedent.git"
   },
   "license": "MIT",
   "engines": {
-    "node": ">=8.0.0"
+    "node": ">=0.12.0"
   },
   "scripts": {
     "lint:ts": "npm run test:lint:ts -- --fix",

@@ -6,7 +6,7 @@ function common(esm) {
   return {
     // Indicate here external modules you don't wanna include in your bundle (i.e.: 'lodash')
     external: [],
-    input: 'src/deduct.ts',
+    input: 'src/dedent.ts',
     output: esm
       ? { file: pkg.module, format: 'es', sourcemap: true }
       : { file: pkg.main, name: 'overPromise', format: 'umd', sourcemap: true },

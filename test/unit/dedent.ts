@@ -1,6 +1,6 @@
 type Tag<R> = (strings: TemplateStringsArray, ...substitutions: any[]) => R;
 
-import dd from '../../src/deduct';
+import dd from '../../src/dedent';
 
 function cooked(strings: TemplateStringsArray, ...substitutions: any[]): string;
 function cooked(strings: TemplateStringsArray): string {

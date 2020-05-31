@@ -8,10 +8,10 @@ const cache = new WeakMap<TemplateStringsArray, TemplateStringsArray>();
 const newline = /(\n|\r\n?|\u2028|\u2029)/g;
 const leadingWhitespace = /^\s*/;
 
-function deduct(str: string): string;
-function deduct(str: TemplateStringsArray, ...substitutions: unknown[]): string;
-function deduct<A extends any[], R, T>(tag: Tag<A, R, T>): Tag<A, R, T>;
-function deduct<A extends any[], R, T>(
+function dedent(str: string): string;
+function dedent(str: TemplateStringsArray, ...substitutions: unknown[]): string;
+function dedent<A extends any[], R, T>(tag: Tag<A, R, T>): Tag<A, R, T>;
+function dedent<A extends any[], R, T>(
   arg: string | TemplateStringsArray | Tag<A, R, T>,
 ): string | Tag<A, R, T> {
   if (typeof arg === 'string') {
@@ -54,15 +54,15 @@ function processTemplateStringsArray(
   const cached = cache.get(strings);
   if (cached) return cached;
 
-  const deducted = process(strings) as TemplateStringsArray;
-  cache.set(strings, deducted);
+  const dedented = process(strings) as TemplateStringsArray;
+  cache.set(strings, dedented);
 
-  Object.defineProperty(deducted, 'raw', {
+  Object.defineProperty(dedented, 'raw', {
     value: Object.freeze(process(strings.raw)),
   });
-  Object.freeze(deducted);
+  Object.freeze(dedented);
 
-  return deducted;
+  return dedented;
 }
 
 function process(strings: readonly string[]): readonly string[];
@@ -142,4 +142,4 @@ function process(
   });
 }
 
-export default deduct;
+export default dedent;
