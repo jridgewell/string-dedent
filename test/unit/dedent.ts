@@ -25,7 +25,7 @@ describe('actual usage testing', () => {
       this
       foobar
     `);
-    expect(actual).toBe('testing\nthis\nfoobar')
+    expect(actual).toBe('testing\nthis\nfoobar');
   });
 
   it('called as tagged template', () => {
@@ -34,7 +34,7 @@ describe('actual usage testing', () => {
       this
       foobar
     `;
-    expect(actual).toBe('testing\nthis\nfoobar')
+    expect(actual).toBe('testing\nthis\nfoobar');
   });
 
   it('called as wrapeed tagged template', () => {
@@ -44,8 +44,8 @@ describe('actual usage testing', () => {
       this
       foobar
     `;
-    expect(actual).toBe('testing\nthis\nfoobar')
-  })
+    expect(actual).toBe('testing\nthis\nfoobar');
+  });
 });
 
 it.each([

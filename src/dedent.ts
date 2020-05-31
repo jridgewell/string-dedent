@@ -24,6 +24,7 @@ function dedent<A extends any[], R, T>(
       strings: TemplateStringsArray,
       ...substitutions: any[]
     ): R {
+      // tslint:disable-next-line
       return (arg as any).call(
         this,
         processTemplateStringsArray(strings),
@@ -40,12 +41,15 @@ function dedent<A extends any[], R, T>(
   return s;
 }
 
-function getCooked(strings: TemplateStringsArray, index: number): string {
-  const string = strings[index];
-  if (string === undefined) {
+function getCooked(
+  strings: readonly (string | undefined)[],
+  index: number,
+): string {
+  const str = strings[index];
+  if (str === undefined) {
     throw new TypeError(`invalid cooked string at index ${index}`);
   }
-  return string;
+  return str;
 }
 
 function processTemplateStringsArray(
@@ -69,7 +73,9 @@ function process(strings: readonly string[]): readonly string[];
 function process(
   strings: readonly (string | undefined)[],
 ): readonly (string | undefined)[] {
-  const splits = strings.slice().map((quasi) => {
+  const splits = strings.slice().map((quasi: string | undefined):
+    | string[]
+    | undefined => {
     return quasi === undefined ? quasi : quasi.split(newline);
   });
 
@@ -126,7 +132,9 @@ function process(
     }
   }
 
-  return splits.map((lines, i) => {
+  return splits.map((lines: string[] | undefined, i: number):
+    | string
+    | undefined => {
     if (lines === undefined) return lines;
 
     let quasi = lines[0];
