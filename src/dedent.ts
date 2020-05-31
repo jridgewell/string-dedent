@@ -77,7 +77,7 @@ function process(
     return quasi === undefined ? quasi : quasi.split(newline);
   });
 
-  let minMatch;
+  let common;
   for (let i = 0; i < splits.length; i++) {
     const lines = splits[i];
     if (lines === undefined) continue;
@@ -101,10 +101,10 @@ function process(
         lines[j] = '';
         continue;
       }
-      if (minMatch === undefined) {
-        minMatch = matched;
+      if (common === undefined) {
+        common = matched;
       } else {
-        minMatch = inCommon(minMatch, matched);
+        common = commonStart(common, matched);
       }
     }
   }
@@ -125,7 +125,7 @@ function process(
     if (lastSplit[lastIndex] === '') lastSplit[lastIndex - 1] = '';
   }
 
-  const min = minMatch ? minMatch.length : 0;
+  const min = common ? common.length : 0;
   return splits.map((lines, i) => {
     if (lines === undefined) return lines;
 
@@ -137,12 +137,11 @@ function process(
     for (let i = 1; i < lines.length; i += 2) {
       quasi = quasi + lines[i] + lines[i + 1].slice(min);
     }
-
     return quasi;
   });
 }
 
-function inCommon(a: string, b: string): string {
+function commonStart(a: string, b: string): string {
   const length = Math.min(a.length, b.length);
   let i = 0;
   for (; i < length; i++) {
