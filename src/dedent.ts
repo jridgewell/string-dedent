@@ -24,7 +24,7 @@ function dedent<A extends any[], R, T>(
       strings: TemplateStringsArray,
       ...substitutions: any[]
     ): R {
-      // tslint:disable-next-line
+      // tslint:disable-next-line no-unsafe-any
       return (arg as any).call(
         this,
         processTemplateStringsArray(strings),
@@ -73,9 +73,7 @@ function process(strings: readonly string[]): readonly string[];
 function process(
   strings: readonly (string | undefined)[],
 ): readonly (string | undefined)[] {
-  const splits = strings.slice().map((quasi: string | undefined):
-    | string[]
-    | undefined => {
+  const splits = strings.slice().map((quasi) => {
     return quasi === undefined ? quasi : quasi.split(newline);
   });
 
@@ -128,9 +126,7 @@ function process(
   }
 
   const min = minMatch ? minMatch.length : 0;
-  return splits.map((lines: string[] | undefined, i: number):
-    | string
-    | undefined => {
+  return splits.map((lines, i) => {
     if (lines === undefined) return lines;
 
     let quasi = lines[0];
