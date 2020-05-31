@@ -11,7 +11,8 @@
     "allowSyntheticDefaultImports": true,
     "useDefineForClassFields": true,
     "declarationDir": "dist/types",
-    "outDir": "dist/lib",
+    "outDir": "dist",
+    "rootDir": "src",
     "typeRoots": [
       "node_modules/@types"
     ]

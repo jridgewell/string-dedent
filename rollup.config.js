@@ -1,15 +1,13 @@
-import typescript from 'rollup-plugin-typescript';
+import typescript from '@rollup/plugin-typescript';
 
 const pkg = require('./package.json');
 
 function common(esm) {
   return {
-    // Indicate here external modules you don't wanna include in your bundle (i.e.: 'lodash')
-    external: [],
     input: 'src/dedent.ts',
     output: esm
-      ? { file: pkg.module, format: 'es', sourcemap: true }
-      : { file: pkg.main, name: 'dedent', format: 'umd', sourcemap: true },
+      ? { format: 'es', dir: 'dist', entryFileNames: '[name].mjs', sourcemap: true }
+      : { format: 'umd', name: 'dedent', dir: 'dist', entryFileNames: '[name].umd.js', sourcemap: true },
     plugins: [
       // Compile TypeScript files
       typescript(esm ? {} : { target: 'ES5' }),
