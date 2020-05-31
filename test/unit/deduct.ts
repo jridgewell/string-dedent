@@ -18,6 +18,36 @@ function identity(strings: TemplateStringsArray): TemplateStringsArray {
   return strings;
 }
 
+describe('actual usage testing', () => {
+  it('called as function', () => {
+    const actual = dd(`
+      testing
+      this
+      foobar
+    `);
+    expect(actual).toBe('testing\nthis\nfoobar')
+  });
+
+  it('called as tagged template', () => {
+    const actual = dd`
+      testing
+      this
+      foobar
+    `;
+    expect(actual).toBe('testing\nthis\nfoobar')
+  });
+
+  it('called as wrapeed tagged template', () => {
+    const wrapped = dd(cooked);
+    const actual = wrapped`
+      testing
+      this
+      foobar
+    `;
+    expect(actual).toBe('testing\nthis\nfoobar')
+  })
+});
+
 it.each([
   // No line breaks
   [`test`, 'test'],
@@ -43,6 +73,9 @@ it.each([
   [`  test\ntest`, '  test\ntest'],
   [`  test\n test`, ' test\ntest'],
   [`  test\n  test`, 'test\ntest'],
+  [`\n  test\n  test`, 'test\ntest'],
+  [`  test\n  test\n`, 'test\ntest'],
+  [`\n  test\n  test\n`, 'test\ntest'],
   // Minimal whitespace ignores empty lines
   [`test\n\ntest`, 'test\n\ntest'],
   [`test\n\n  test`, 'test\n\n  test'],

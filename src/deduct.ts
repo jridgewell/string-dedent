@@ -81,7 +81,6 @@ function process(
     // If we're at the first template quasi, then the 0 index starts the line.
     // If not, then the 0 index is on the same line after the expression.
     const start = i === 0 ? 0 : 2;
-    const splitLength = split.length;
 
     // Every odd index is the newline char, so we'll skip and only process evens
     for (let j = start; j < split.length; j += 2) {
@@ -91,7 +90,12 @@ function process(
       const { length } = leading[0];
       // Do not count the line if it's all whitespace (and directly before a
       // newline, not an expression)
-      if (length === s.length && j + 1 < splitLength) continue;
+      if (
+        length === s.length &&
+        (j + 1 < split.length || i + 1 === splits.length)
+      ) {
+        continue;
+      }
       if (length < min) min = length;
     }
   }
