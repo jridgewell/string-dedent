@@ -69,34 +69,34 @@ function process(strings: readonly string[]): readonly string[];
 function process(
   strings: readonly (string | undefined)[],
 ): readonly (string | undefined)[] {
-  const splits = strings.slice().map((s) => {
-    return s === undefined ? s : s.split(newline);
+  const splits = strings.slice().map((quasi) => {
+    return quasi === undefined ? quasi : quasi.split(newline);
   });
 
   let min = Infinity;
   for (let i = 0; i < splits.length; i++) {
-    const split = splits[i];
-    if (split === undefined) continue;
+    const lines = splits[i];
+    if (lines === undefined) continue;
 
     // If we're at the first template quasi, then the 0 index starts the line.
     // If not, then the 0 index is on the same line after the expression.
     const start = i === 0 ? 0 : 2;
 
     // Every odd index is the newline char, so we'll skip and only process evens
-    for (let j = start; j < split.length; j += 2) {
-      const s = split[j];
-      const leading = leadingWhitespace.exec(s)!;
+    for (let j = start; j < lines.length; j += 2) {
+      const line = lines[j];
+      const leading = leadingWhitespace.exec(line)!;
 
-      const { length } = leading[0];
-      // Do not count the line if it's all whitespace (and directly before a
-      // newline, not an expression)
+      const matchLength = leading[0].length;
+      // Do not count the line if it's all whitespace and directly before a
+      // newline (or the very last line), not an expression.
       if (
-        length === s.length &&
-        (j + 1 < split.length || i + 1 === splits.length)
+        matchLength === line.length &&
+        (j + 1 < lines.length || i + 1 === splits.length)
       ) {
         continue;
       }
-      if (length < min) min = length;
+      if (matchLength < min) min = matchLength;
     }
   }
 
@@ -126,19 +126,19 @@ function process(
     }
   }
 
-  return splits.map((split, i) => {
-    if (split === undefined) return split;
+  return splits.map((lines, i) => {
+    if (lines === undefined) return lines;
 
-    let s = split[0];
+    let quasi = lines[0];
     // Only the first split's first line is actually the start of a line.
     // Every other split's first line continues the same line as the expression.
-    if (i === 0) s = s.slice(min);
+    if (i === 0) quasi = quasi.slice(min);
 
-    for (let i = 1; i < split.length; i += 2) {
-      s = s + split[i] + split[i + 1].slice(min);
+    for (let i = 1; i < lines.length; i += 2) {
+      quasi = quasi + lines[i] + lines[i + 1].slice(min);
     }
 
-    return s;
+    return quasi;
   });
 }
 
