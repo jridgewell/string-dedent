@@ -73,7 +73,7 @@ function process(strings: readonly string[]): readonly string[];
 function process(
   strings: readonly (string | undefined)[],
 ): readonly (string | undefined)[] {
-  const splits = strings.slice().map((quasi) => {
+  const splits = strings.map((quasi) => {
     return quasi === undefined ? quasi : quasi.split(newline);
   });
 
