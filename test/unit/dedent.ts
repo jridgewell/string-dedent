@@ -48,6 +48,23 @@ describe('actual usage testing', () => {
   });
 });
 
+describe('edge cases', () => {
+  it('all empty', () => {
+    const actual = dd``;
+    expect(actual).toBe('');
+  });
+
+  it('all whitespace', () => {
+    const actual = dd`    `;
+    expect(actual).toBe('');
+  });
+
+  it('all newline', () => {
+    const actual = dd`\n\n\n\n\n`;
+    expect(actual).toBe('\n\n\n');
+  });
+});
+
 it.each([
   // No line breaks
   [`test`, 'test'],

@@ -92,17 +92,17 @@ function process(
       const leading = leadingWhitespace.exec(line)!;
       const matched = leading[0];
 
-      const lastLine = j + 1 === lines.length;
-      const lastSplits = i + 1 === splits.length;
+      const lastSplitLine = j + 1 === lines.length;
+      const lastSplit = i + 1 === splits.length;
       if (
         matched.length === line.length &&
         // We trim the very first line (provided it doesn't include an expression),
         // and the very last line (provided it's on a new line following any expression).
-        ((j === 0 && i === 0 && !lastLine) || (lastLine && lastSplits))
+        (j === 0 ? !lastSplitLine : lastSplitLine && lastSplit)
       ) {
         lines[j] = '';
         lines[j + (j === 0 ? 1 : -1)] = '';
-      } else if (line.length > 0 || (lastLine && !lastSplits)) {
+      } else if (line.length > 0 || (lastSplitLine && !lastSplit)) {
         // A line counts torwards the common whitespace if it's non-empty,
         // or if it's directly before an expression.
         common = commonStart(matched, common);
