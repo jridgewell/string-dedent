@@ -36,7 +36,7 @@ function dedent<A extends unknown[], R, T>(
   const strings = processTemplateStringsArray(arg);
   let s = getCooked(strings, 0);
   for (let i = 1; i < strings.length; i++) {
-    s = s + arguments[i] + getCooked(strings, i);
+    s += arguments[i] + getCooked(strings, i);
   }
   return s;
 }
@@ -73,9 +73,7 @@ function process(strings: readonly string[]): readonly string[];
 function process(
   strings: readonly (string | undefined)[],
 ): readonly (string | undefined)[] {
-  const splits = strings.map((quasi) => {
-    return quasi === undefined ? quasi : quasi.split(newline);
-  });
+  const splits = strings.map((quasi) => quasi?.split(newline));
 
   let common;
   for (let i = 0; i < splits.length; i++) {
@@ -120,7 +118,7 @@ function process(
     if (i === 0) quasi = quasi.slice(min);
 
     for (let i = 1; i < lines.length; i += 2) {
-      quasi = quasi + lines[i] + lines[i + 1].slice(min);
+      quasi += lines[i] + lines[i + 1].slice(min);
     }
     return quasi;
   });
