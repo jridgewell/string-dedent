@@ -36,7 +36,7 @@ function dedent<A extends unknown[], R, T>(
   const strings = processTemplateStringsArray(arg);
   let s = getCooked(strings, 0);
   for (let i = 1; i < strings.length; i++) {
-    s = s + arguments[i] + getCooked(strings, i);
+    s += arguments[i] + getCooked(strings, i);
   }
   return s;
 }
@@ -73,9 +73,7 @@ function process(strings: readonly string[]): readonly string[];
 function process(
   strings: readonly (string | undefined)[],
 ): readonly (string | undefined)[] {
-  const splits = strings.map((quasi) => {
-    return quasi === undefined ? quasi : quasi.split(newline);
-  });
+  const splits = strings.map((quasi) => quasi?.split(newline));
 
   let common;
   for (let i = 0; i < splits.length; i++) {
@@ -90,39 +88,24 @@ function process(
     for (let j = start; j < lines.length; j += 2) {
       const line = lines[j];
       const leading = leadingWhitespace.exec(line)!;
-
       const matched = leading[0];
-      // Do not count the line if it's all whitespace and directly before a
-      // newline (or the very last line), not an expression.
+
+      const lastSplitLine = j + 1 === lines.length;
+      const lastSplit = i + 1 === splits.length;
       if (
         matched.length === line.length &&
-        (j + 1 < lines.length || i + 1 === splits.length)
+        // We trim the very first line (provided it doesn't include an expression),
+        // and the very last line (provided it's on a new line following any expression).
+        (j === 0 ? !lastSplitLine : lastSplitLine && lastSplit)
       ) {
         lines[j] = '';
-        continue;
-      }
-      if (common === undefined) {
-        common = matched;
-      } else {
-        common = commonStart(common, matched);
+        lines[j + (j === 0 ? 1 : -1)] = '';
+      } else if (line.length > 0 || (lastSplitLine && !lastSplit)) {
+        // A line counts torwards the common whitespace if it's non-empty,
+        // or if it's directly before an expression.
+        common = commonStart(matched, common);
       }
     }
-  }
-
-  // Strip the first line if it's all whitespace
-  const firstSplit = splits[0];
-  // It only counts if this line was directly before a newline, not an
-  // expression
-  if (firstSplit && firstSplit.length > 1) {
-    if (firstSplit[0] === '') firstSplit[1] = '';
-  }
-
-  // Strip the last line if it's all whitespace
-  const lastSplit = splits[splits.length - 1];
-  // It only counts if this line was directly after a newline, not an expression
-  if (lastSplit && lastSplit.length > 1) {
-    const lastIndex = lastSplit.length - 1;
-    if (lastSplit[lastIndex] === '') lastSplit[lastIndex - 1] = '';
   }
 
   const min = common ? common.length : 0;
@@ -135,13 +118,14 @@ function process(
     if (i === 0) quasi = quasi.slice(min);
 
     for (let i = 1; i < lines.length; i += 2) {
-      quasi = quasi + lines[i] + lines[i + 1].slice(min);
+      quasi += lines[i] + lines[i + 1].slice(min);
     }
     return quasi;
   });
 }
 
-function commonStart(a: string, b: string): string {
+function commonStart(a: string, b: string | undefined): string {
+  if (b === undefined || a === b) return a;
   const length = Math.min(a.length, b.length);
   let i = 0;
   for (; i < length; i++) {
