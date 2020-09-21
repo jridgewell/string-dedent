@@ -32,7 +32,7 @@ This line will appear without any indentation.
   * This list will appear with 2 spaces more than previous line.
   * As will this line.
 
-Empty lines (whitespace only, like the one above) will not affect the common indentation.
+Empty lines (like the one above) will not affect the common indentation.
 ```
 
 ## Installation
