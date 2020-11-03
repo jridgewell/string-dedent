@@ -1,8 +1,6 @@
 import typescript from '@rollup/plugin-typescript';
 
-const pkg = require('./package.json');
-
-function common(esm) {
+function configure(esm) {
   return {
     input: 'src/dedent.ts',
     output: esm
@@ -10,7 +8,7 @@ function common(esm) {
       : { format: 'umd', name: 'dedent', dir: 'dist', entryFileNames: '[name].umd.js', sourcemap: true },
     plugins: [
       // Compile TypeScript files
-      typescript(esm ? {} : { target: 'ES5' }),
+      typescript({ tsconfig: './tsconfig.build.json', ...(esm ? {} : { target: 'ES5' }) }),
     ],
     watch: {
       include: 'src/**',
@@ -18,4 +16,4 @@ function common(esm) {
   };
 }
 
-export default [common(false), common(true)];
+export default [configure(false), configure(true)];
