@@ -125,7 +125,7 @@ function process(
   // If the opening line is whitespace-only and does not contain a `${}`, then
   // we remove the newline character that ends it.
   if (openingSplit.length > 2) {
-    let openingLine = openingSplit[0];
+    const openingLine = openingSplit[0];
     if (leadingWhitespace.exec(openingLine)![0] === openingLine) {
       openingSplit[0] = '';
       openingSplit[1] = '';
@@ -134,7 +134,7 @@ function process(
   // If the closing line is whitespace-only and does not follow a `${}`, then we
   // remove the newline character that started it.
   if (closingSplit.length > 2) {
-    let closingLine = closingSplit[closingSplit.length - 1];
+    const closingLine = closingSplit[closingSplit.length - 1];
     if (leadingWhitespace.exec(closingLine)![0] === closingLine) {
       closingSplit[closingSplit.length - 2] = '';
       closingSplit[closingSplit.length - 1] = '';

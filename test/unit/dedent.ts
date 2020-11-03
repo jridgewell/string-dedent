@@ -270,28 +270,28 @@ describe('wraps tagged template (cooked)', () => {
       return a + b;
     };
     const wrapped = dd(tag);
-    const strings = ((s: TemplateStringsArray, ...args: unknown[]) => s)`
+    const strings = ((s: TemplateStringsArray, ..._args: unknown[]) => s)`
       abc${0}def${'ghi'}jkl
     `;
 
     // Correct call signature
     wrapped(strings, 1, 'test');
 
-    // @ts-expect-error
+    // @ts-expect-error first param must be number
     wrapped(strings, 'test', 'test');
-    // @ts-expect-error
+    // @ts-expect-error second param must be string
     wrapped(strings, 1, 1);
-    // @ts-expect-error
+    // @ts-expect-error second param must be string
     wrapped(strings, 1, 'test', null);
-    // @ts-expect-error
+    // @ts-expect-error return value is a string
     const x: number = wrapped(strings, 1, 'test');
-    ((x: number) => {})(x); // use x
+    ((_x: number) => {})(x); // use x
 
     const contextWrapped = dd(function (
-      this: {},
-      strings: TemplateStringsArray,
+      this: number,
+      _strings: TemplateStringsArray,
     ): void {});
-    // @ts-expect-error
+    // @ts-expect-error must be invoked on a number
     contextWrapped(strings);
   });
 
