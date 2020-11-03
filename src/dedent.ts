@@ -84,54 +84,88 @@ function process(
     // If not, then the 0 index is on the same line after the expression.
     const start = i === 0 ? 0 : 2;
 
+    // Last split signifies that we are processing the final static text portion of the template
+    // literal (everything after the final `${}` expression).
+    const lastSplit = i + 1 === splits.length;
+
     // Every odd index is the newline char, so we'll skip and only process evens
     for (let j = start; j < lines.length; j += 2) {
       const line = lines[j];
       const leading = leadingWhitespace.exec(line)!;
       const matched = leading[0];
 
+      // Last split line signifies we are processing the line that contains a `${}` template
+      // expression (or the closing line, if this is also the last split).
       const lastSplitLine = j + 1 === lines.length;
-      const lastSplit = i + 1 === splits.length;
-      if (
-        matched.length === line.length &&
-        // We trim the very first line (provided it doesn't include an expression),
-        // and the very last line (provided it's on a new line following any expression).
-        (j === 0 ? !lastSplitLine : lastSplitLine && lastSplit)
-      ) {
-        lines[j] = '';
-        lines[j + (j === 0 ? 1 : -1)] = '';
-      } else if (line.length > 0 || (lastSplitLine && !lastSplit)) {
-        // A line counts torwards the common whitespace if it's non-empty,
-        // or if it's directly before an expression.
-        common = commonStart(matched, common);
+
+      // If we are on the last line of this split, and we are not processing the last split (which
+      // is after all template expressions), then this line contains a `${}`.
+      const lineContainsTemplateExpression = lastSplitLine && !lastSplit;
+
+      // If there is only whitespace on this line, then it doesn't contribute to indentation,
+      // unless this line contains a `${}` expression.
+      if (matched.length === line.length && !lineContainsTemplateExpression) {
+        continue;
+      }
+
+      // This line contains significant characters, so it is used in the common calculation.
+      if (common === undefined) {
+        common = matched;
+      } else {
+        const length = calculateCommonLength(matched, common);
+        common = common.slice(0, length);
       }
     }
   }
 
-  const min = common ? common.length : 0;
+  const remove = common ?? '';
+  const openingSplit = splits[0]!;
+  const closingSplit = splits[splits.length - 1]!;
+
+  // If the opening line is whitespace-only and does not contain a `${}`, then
+  // we remove the newline character that ends it.
+  if (openingSplit.length > 2) {
+    let openingLine = openingSplit[0];
+    if (leadingWhitespace.exec(openingLine)![0] === openingLine) {
+      openingSplit[0] = '';
+      openingSplit[1] = '';
+    }
+  }
+  // If the closing line is whitespace-only and does not follow a `${}`, then we
+  // remove the newline character that started it.
+  if (closingSplit.length > 2) {
+    let closingLine = closingSplit[closingSplit.length - 1];
+    if (leadingWhitespace.exec(closingLine)![0] === closingLine) {
+      closingSplit[closingSplit.length - 2] = '';
+      closingSplit[closingSplit.length - 1] = '';
+    }
+  }
+
   return splits.map((lines, i) => {
     if (lines === undefined) return lines;
 
     let quasi = lines[0];
+
     // Only the first split's first line is actually the start of a line.
     // Every other split's first line continues the same line as the expression.
-    if (i === 0) quasi = quasi.slice(min);
+    if (i === 0) quasi = quasi.slice(calculateCommonLength(quasi, remove));
 
     for (let i = 1; i < lines.length; i += 2) {
-      quasi += lines[i] + lines[i + 1].slice(min);
+      const next = lines[i + 1];
+      quasi += lines[i] + next.slice(calculateCommonLength(next, remove));
     }
+
     return quasi;
   });
 }
 
-function commonStart(a: string, b: string | undefined): string {
-  if (b === undefined || a === b) return a;
+function calculateCommonLength(a: string, b: string): number {
   const length = Math.min(a.length, b.length);
   let i = 0;
   for (; i < length; i++) {
     if (a[i] !== b[i]) break;
   }
-  return a.slice(0, i);
+  return i;
 }
 
 export default dedent;
