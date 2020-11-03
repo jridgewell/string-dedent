@@ -7,6 +7,7 @@ type Tag<A extends unknown[], R, T> = (
 const cache = new WeakMap<TemplateStringsArray, TemplateStringsArray>();
 const newline = /(\n|\r\n?|\u2028|\u2029)/g;
 const leadingWhitespace = /^\s*/;
+const nonWhitespace = /\S/;
 
 function dedent(str: string): string;
 function dedent(str: TemplateStringsArray, ...substitutions: unknown[]): string;
@@ -80,13 +81,35 @@ function process(
     const lines = splits[i];
     if (lines === undefined) continue;
 
-    // If we're at the first template quasi, then the 0 index starts the line.
-    // If not, then the 0 index is on the same line after the expression.
-    const start = i === 0 ? 0 : 2;
+    // First split is the static text starting at the opening line until the
+    // first `${}` template expression.
+    const firstSplit = i === 0;
 
-    // Last split signifies that we are processing the final static text portion of the template
-    // literal (everything after the final `${}` expression).
+    // Last split is all the static text after the final `${}` until the closing
+    // line.
     const lastSplit = i + 1 === splits.length;
+
+    // If we're at the first split, then the 0 index is the start of a line. If
+    // not, then the 0 index is on the same line after a `${}` so we can skip it when
+    // calculating the common indentation.
+    const start = firstSplit ? 0 : 2;
+
+    // The opening line (and its ending newline) is removed if it does not
+    // contain a `${}` and only contains whitespace.
+    if (firstSplit && lines.length > 1 && !nonWhitespace.test(lines[0])) {
+      lines[0] = '';
+      lines[1] = '';
+    }
+    // The closing line (and its beginning newline) is removed if it does not
+    // contain a `${}` and only contains whitespace.
+    if (
+      lastSplit &&
+      lines.length > 1 &&
+      !nonWhitespace.test(lines[lines.length - 1])
+    ) {
+      lines[lines.length - 1] = '';
+      lines[lines.length - 2] = '';
+    }
 
     // Every odd index is the newline char, so we'll skip and only process evens
     for (let j = start; j < lines.length; j += 2) {
@@ -94,13 +117,9 @@ function process(
       const leading = leadingWhitespace.exec(line)!;
       const matched = leading[0];
 
-      // Last split line signifies we are processing the line that contains a `${}` template
-      // expression (or the closing line, if this is also the last split).
-      const lastSplitLine = j + 1 === lines.length;
-
       // If we are on the last line of this split, and we are not processing the last split (which
       // is after all template expressions), then this line contains a `${}`.
-      const lineContainsTemplateExpression = lastSplitLine && !lastSplit;
+      const lineContainsTemplateExpression = j + 1 === lines.length && !lastSplit;
 
       // If there is only whitespace on this line, then it doesn't contribute to indentation,
       // unless this line contains a `${}` expression.
@@ -118,29 +137,7 @@ function process(
     }
   }
 
-  const remove = common ?? '';
-  const openingSplit = splits[0]!;
-  const closingSplit = splits[splits.length - 1]!;
-
-  // If the opening line is whitespace-only and does not contain a `${}`, then
-  // we remove the newline character that ends it.
-  if (openingSplit.length > 2) {
-    const openingLine = openingSplit[0];
-    if (leadingWhitespace.exec(openingLine)![0] === openingLine) {
-      openingSplit[0] = '';
-      openingSplit[1] = '';
-    }
-  }
-  // If the closing line is whitespace-only and does not follow a `${}`, then we
-  // remove the newline character that started it.
-  if (closingSplit.length > 2) {
-    const closingLine = closingSplit[closingSplit.length - 1];
-    if (leadingWhitespace.exec(closingLine)![0] === closingLine) {
-      closingSplit[closingSplit.length - 2] = '';
-      closingSplit[closingSplit.length - 1] = '';
-    }
-  }
-
+  const remove = common || '';
   return splits.map((lines, i) => {
     if (lines === undefined) return lines;
 
