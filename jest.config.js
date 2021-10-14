@@ -2,8 +2,7 @@ module.exports = {
   transform: {
     '.ts': 'ts-jest',
   },
-  testEnvironment: 'node',
-  testRegex: 'test/[^\\.]*\\.ts$',
+  testMatch: ['**/test/**/*.ts'],
   moduleFileExtensions: ['ts', 'js'],
   coveragePathIgnorePatterns: ['/node_modules/', '/test/'],
   coverageThreshold: {
@@ -14,5 +13,5 @@ module.exports = {
       statements: 95,
     },
   },
-  collectCoverageFrom: ['src/*.{js,ts}'],
+  collectCoverageFrom: ['src/**/*.ts'],
 };
