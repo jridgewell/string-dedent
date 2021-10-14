@@ -20,17 +20,9 @@ function dedent<A extends unknown[], R, T>(
   }
 
   if (typeof arg === 'function') {
-    return function (
-      this: T,
-      strings: TemplateStringsArray,
-      ...substitutions: A
-    ): R {
+    return function (this: T, strings: TemplateStringsArray, ...substitutions: A): R {
       // tslint:disable-next-line no-unsafe-any no-any
-      return (arg as any).call(
-        this,
-        processTemplateStringsArray(strings),
-        ...substitutions,
-      );
+      return (arg as any).call(this, processTemplateStringsArray(strings), ...substitutions);
     };
   }
 
@@ -42,19 +34,13 @@ function dedent<A extends unknown[], R, T>(
   return s;
 }
 
-function getCooked(
-  strings: readonly (string | undefined)[],
-  index: number,
-): string {
+function getCooked(strings: readonly (string | undefined)[], index: number): string {
   const str = strings[index];
-  if (str === undefined)
-    throw new TypeError(`invalid cooked string at index ${index}`);
+  if (str === undefined) throw new TypeError(`invalid cooked string at index ${index}`);
   return str;
 }
 
-function processTemplateStringsArray(
-  strings: TemplateStringsArray,
-): TemplateStringsArray {
+function processTemplateStringsArray(strings: TemplateStringsArray): TemplateStringsArray {
   const cached = cache.get(strings);
   if (cached) return cached;
 
@@ -70,9 +56,7 @@ function processTemplateStringsArray(
 }
 
 function process(strings: readonly string[]): readonly string[];
-function process(
-  strings: readonly (string | undefined)[],
-): readonly (string | undefined)[] {
+function process(strings: readonly (string | undefined)[]): readonly (string | undefined)[] {
   const splits = strings.map((quasi) => quasi?.split(newline));
 
   let common;
@@ -95,11 +79,7 @@ function process(
 
     // The closing line may only contain whitespace characters and must not contain a template
     // expression. The closing line and its starting newline will be removed.
-    if (
-      lastSplit &&
-      lines.length > 1 &&
-      !nonWhitespace.test(lines[lines.length - 1])
-    ) {
+    if (lastSplit && lines.length > 1 && !nonWhitespace.test(lines[lines.length - 1])) {
       lines[lines.length - 2] = '';
       lines[lines.length - 1] = '';
     }
@@ -115,8 +95,7 @@ function process(
 
       // If we are on the last line of this split, and we are not processing the last split (which
       // is after all template expressions), then this line contains a `${}`.
-      const lineContainsTemplateExpression =
-        j + 1 === lines.length && !lastSplit;
+      const lineContainsTemplateExpression = j + 1 === lines.length && !lastSplit;
 
       // Empty lines do not affect to the common indentation.
       if (line.length === 0 && !lineContainsTemplateExpression) continue;

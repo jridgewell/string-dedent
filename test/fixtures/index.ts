@@ -15,6 +15,9 @@ function hideWhitespace(contents: string): string {
 function trailingNewline(contents: string): string {
   return contents.replace(/\n?$/, '\n');
 }
+function trimTrailingNewline(contents: string | undefined): string | undefined {
+  return contents?.replace(/\n?$/, '');
+}
 
 function readFile(path: string): string | undefined {
   try {
@@ -50,8 +53,7 @@ function runTest(root: string, name: string): void {
     const errorPath = path.join(root, name, 'error.txt');
     const input = readFile(inputPath)!;
     const expectedOutput = readFile(outputPath);
-    const expectedError =
-      expectedOutput === undefined ? readFile(errorPath) : undefined;
+    const expectedError = expectedOutput === undefined ? readFile(errorPath) : undefined;
 
     let output: string | undefined;
     let actualError: string | undefined;
@@ -66,7 +68,7 @@ function runTest(root: string, name: string): void {
       writeFile(inputPath, trailingNewline(showWhitespace(input, false)));
     }
     if (expectedOutput !== undefined && !expectedOutput.endsWith('\n')) {
-      writeFile(outputPath, `${expectedOutput}\n`);
+      writeFile(outputPath, trailingNewline(expectedOutput));
     }
 
     if (expectedError === undefined && expectedOutput === undefined) {
@@ -80,10 +82,7 @@ function runTest(root: string, name: string): void {
 
     try {
       const actual = output ?? actualError;
-      const expected =
-        output === undefined
-          ? expectedError
-          : expectedOutput?.replace(/\n$/, '');
+      const expected = trimTrailingNewline(output === undefined ? expectedError : expectedOutput);
       expect(actual).toBe(expected);
     } catch (e) {
       if (!OVERWRITE) throw e;
