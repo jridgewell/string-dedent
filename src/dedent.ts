@@ -8,6 +8,7 @@ const cache = new WeakMap<TemplateStringsArray, TemplateStringsArray>();
 const newline = /(\n|\r\n?|\u2028|\u2029)/g;
 const leadingWhitespace = /^\s*/;
 const nonWhitespace = /\S/;
+const slice = Array.prototype.slice;
 
 function dedent(str: string): string;
 function dedent(str: TemplateStringsArray, ...substitutions: unknown[]): string;
@@ -20,10 +21,11 @@ function dedent<A extends unknown[], R, T>(
   }
 
   if (typeof arg === 'function') {
-    return function (this: T, strings: TemplateStringsArray, ...substitutions: A): R {
-      // tslint:disable-next-line no-unsafe-any no-any
-      return (arg as any).call(this, processTemplateStringsArray(strings), ...substitutions);
-    };
+    return function () {
+      const args = slice.call(arguments);
+      args[0] = processTemplateStringsArray(args[0]);
+      return (arg as any).apply(this, args);
+    } as Tag<A, R, T>;
   }
 
   const strings = processTemplateStringsArray(arg);
