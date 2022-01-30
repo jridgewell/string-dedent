@@ -60,11 +60,11 @@ function processTemplateStringsArray(strings: TemplateStringsArray): TemplateStr
 
 function process(strings: readonly string[]): readonly string[];
 function process(strings: readonly (string | undefined)[]): readonly (string | undefined)[] {
-  const splits = strings.map((quasi) => quasi?.split(newline));
+  const splitQuasis = strings.map((quasi) => quasi?.split(newline));
 
   let common;
-  for (let i = 0; i < splits.length; i++) {
-    const lines = splits[i];
+  for (let i = 0; i < splitQuasis.length; i++) {
+    const lines = splitQuasis[i];
     if (lines === undefined) continue;
 
     // The first split is the static text starting at the opening line until the first template
@@ -73,37 +73,41 @@ function process(strings: readonly (string | undefined)[]): readonly (string | u
 
     // The last split is all the static text after the final template expression until the closing
     // line. If there are no template expressions, then the first split is also the last split.
-    const lastSplit = i + 1 === splits.length;
+    const lastSplit = i + 1 === splitQuasis.length;
 
+    // The opening line may only contain whitespace (but it's probably empty) and it must not
+    // contain a template expression. The opening line and its trailing newline chare are removed.
     if (firstSplit) {
+      // Length > 1 ensures there is a newline, and there is not template expression.
       if (lines.length === 1 || nonWhitespace.test(lines[0])) {
         throw new Error('invalid content on opening line');
       }
-      // Clear the content on the opening line, and the captured newline char.
+      // Clear the whitespace on the opening line, and the captured newline char.
       lines[0] = '';
       lines[1] = '';
     }
 
-    // The closing line may only contain whitespace characters and must not contain a template
-    // expression. The closing line and its starting newline will be removed.
+    // The closing line may only contain whitespace and must not contain a template expression. The
+    // closing line and its preceding newline are removed.
     if (lastSplit) {
+      // Length > 1 ensures there is a newline, and there is not template expression.
       if (lines.length === 1 || nonWhitespace.test(lines[lines.length - 1])) {
         throw new Error('invalid content on closing line');
       }
-      // Clear the captured newline char, and the content on the closing line.
+      // Clear the captured newline char, and the whitespace on the closing line.
       lines[lines.length - 2] = '';
       lines[lines.length - 1] = '';
     }
 
     // In the first spit, the index 0 is the opening line (which must be empty by now), and in all
-    // other splits, its the content trailing the template expression (and so can't be part of
+    // other splitQuasis, its the content trailing the template expression (and so can't be part of
     // leading whitespace).
     // Every odd index is the captured newline char, so we'll skip and only process evens.
     for (let j = 2; j < lines.length; j += 2) {
       const line = lines[j];
 
       // If we are on the last line of this split, and we are not processing the last split (which
-      // is after all template expressions), then this line contains a `${}`.
+      // is after all template expressions), then this line contains a template expression.
       const lineContainsTemplateExpression = j + 1 === lines.length && !lastSplit;
 
       // Empty lines do not affect the common indentation.
@@ -115,7 +119,7 @@ function process(strings: readonly (string | undefined)[]): readonly (string | u
   }
 
   const min = common ? common.length : 0;
-  return splits.map((lines) => {
+  return splitQuasis.map((lines) => {
     if (lines === undefined) return lines;
 
     let quasi = lines[0];
