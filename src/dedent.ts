@@ -29,6 +29,7 @@ function dedent<A extends unknown[], R, T>(
   }
 
   const strings = processTemplateStringsArray(arg);
+  // TODO: This is just `String.cooked`: https://tc39.es/proposal-string-cooked/
   let s = getCooked(strings, 0);
   for (let i = 1; i < strings.length; i++) {
     s += arguments[i] + getCooked(strings, i);
@@ -74,32 +75,38 @@ function process(strings: readonly (string | undefined)[]): readonly (string | u
     // line. If there are no template expressions, then the first split is also the last split.
     const lastSplit = i + 1 === splits.length;
 
-    if (firstSplit && lines.length > 1 && !nonWhitespace.test(lines[0])) {
+    if (firstSplit) {
+      if (lines.length === 1 || nonWhitespace.test(lines[0])) {
+        throw new Error('invalid content on opening line');
+      }
+      // Clear the content on the opening line, and the captured newline char.
       lines[0] = '';
       lines[1] = '';
     }
 
     // The closing line may only contain whitespace characters and must not contain a template
     // expression. The closing line and its starting newline will be removed.
-    if (lastSplit && lines.length > 1 && !nonWhitespace.test(lines[lines.length - 1])) {
+    if (lastSplit) {
+      if (lines.length === 1 || nonWhitespace.test(lines[lines.length - 1])) {
+        throw new Error('invalid content on closing line');
+      }
+      // Clear the captured newline char, and the content on the closing line.
       lines[lines.length - 2] = '';
       lines[lines.length - 1] = '';
     }
 
-    // If we're at the first split, then the 0 index is the start of a line. If not, then the 0
-    // index is on the same line after a template expression, so we need to skip it when calculating
-    // the common indentation.
-    const start = firstSplit ? 0 : 2;
-
+    // In the first spit, the index 0 is the opening line (which must be empty by now), and in all
+    // other splits, its the content trailing the template expression (and so can't be part of
+    // leading whitespace).
     // Every odd index is the captured newline char, so we'll skip and only process evens.
-    for (let j = start; j < lines.length; j += 2) {
+    for (let j = 2; j < lines.length; j += 2) {
       const line = lines[j];
 
       // If we are on the last line of this split, and we are not processing the last split (which
       // is after all template expressions), then this line contains a `${}`.
       const lineContainsTemplateExpression = j + 1 === lines.length && !lastSplit;
 
-      // Empty lines do not affect to the common indentation.
+      // Empty lines do not affect the common indentation.
       if (line.length === 0 && !lineContainsTemplateExpression) continue;
 
       const leading = leadingWhitespace.exec(line)!;
@@ -108,14 +115,10 @@ function process(strings: readonly (string | undefined)[]): readonly (string | u
   }
 
   const min = common ? common.length : 0;
-  return splits.map((lines, i) => {
+  return splits.map((lines) => {
     if (lines === undefined) return lines;
 
     let quasi = lines[0];
-    // Only the first split's first line is actually the start of a line.
-    // Every other split's first line continues the same line as the expression.
-    if (i === 0) quasi = quasi.slice(min);
-
     for (let i = 1; i < lines.length; i += 2) {
       quasi += lines[i] + lines[i + 1].slice(min);
     }
@@ -125,9 +128,8 @@ function process(strings: readonly (string | undefined)[]): readonly (string | u
 
 function commonStart(a: string, b: string | undefined): string {
   if (b === undefined || a === b) return a;
-  const length = Math.min(a.length, b.length);
   let i = 0;
-  for (; i < length; i++) {
+  for (const len = Math.min(a.length, b.length); i < len; i++) {
     if (a[i] !== b[i]) break;
   }
   return a.slice(0, i);

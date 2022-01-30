@@ -16,7 +16,7 @@ function trailingNewline(contents: string): string {
   return contents.replace(/\n?$/, '\n');
 }
 function trimTrailingNewline(contents: string | undefined): string | undefined {
-  return contents?.replace(/\n?$/, '');
+  return contents?.replace(/\n$/, '');
 }
 
 function readFile(path: string): string | undefined {
