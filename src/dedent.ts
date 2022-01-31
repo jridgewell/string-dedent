@@ -75,15 +75,14 @@ function process(strings: readonly (string | undefined)[]): readonly (string | u
     // line. If there are no template expressions, then the first split is also the last split.
     const lastSplit = i + 1 === splitQuasis.length;
 
-    // The opening line may only contain whitespace (but it's probably empty) and it must not
-    // contain a template expression. The opening line and its trailing newline chare are removed.
+    // The opening line must be empty (it's very likely it is) and it must not contain a template
+    // expression. The opening line and its trailing newline chare are removed.
     if (firstSplit) {
       // Length > 1 ensures there is a newline, and there is not template expression.
-      if (lines.length === 1 || nonWhitespace.test(lines[0])) {
+      if (lines.length === 1 || lines[0].length > 0) {
         throw new Error('invalid content on opening line');
       }
-      // Clear the whitespace on the opening line, and the captured newline char.
-      lines[0] = '';
+      // Clear the captured newline char.
       lines[1] = '';
     }
 
