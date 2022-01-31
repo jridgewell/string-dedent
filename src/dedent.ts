@@ -109,10 +109,15 @@ function process(strings: readonly (string | undefined)[]): readonly (string | u
       // is after all template expressions), then this line contains a template expression.
       const lineContainsTemplateExpression = j + 1 === lines.length && !lastSplit;
 
-      // Empty lines do not affect the common indentation.
-      if (line.length === 0 && !lineContainsTemplateExpression) continue;
-
       const leading = leadingWhitespace.exec(line)!;
+
+      // Empty lines do not affect the common indentation, and whitespace only lines are emptied
+      // (and also don't affect the comon indentation).
+      if (!lineContainsTemplateExpression && leading[0].length === line.length) {
+        lines[j] = '';
+        continue;
+      }
+
       common = commonStart(leading[0], common);
     }
   }
