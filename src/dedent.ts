@@ -60,6 +60,30 @@ function processTemplateStringsArray(strings: TemplateStringsArray): TemplateStr
 
 function process(strings: readonly string[]): readonly string[];
 function process(strings: readonly (string | undefined)[]): readonly (string | undefined)[] {
+  // splitQuasis is now an array of arrays. The inner array is contains text content lines on the
+  // even indices, and the newline char that ends the text content line on the odd indices.
+  // In the first array, the inner array's 0 index is the opening line of the template literal.
+  // In all other arrays, the inner array's 0 index is the continuation of the line directly after a
+  // template expression.
+  //
+  // Eg, in the following case:
+  //
+  // ```
+  // String.dedent`
+  //   first
+  //   ${expression} second
+  //   third
+  // `
+  // ```
+  //
+  // We expect the following splitQuasis:
+  //
+  // ```
+  // [
+  //   ["", "\n", "  first", "\n", "  "],
+  //   [" second", "\n", "  third", "\n", ""],
+  // ]
+  // ```
   const splitQuasis = strings.map((quasi) => quasi?.split(newline));
 
   let common;
@@ -75,10 +99,10 @@ function process(strings: readonly (string | undefined)[]): readonly (string | u
     // line. If there are no template expressions, then the first split is also the last split.
     const lastSplit = i + 1 === splitQuasis.length;
 
-    // The opening line must be empty (it's very likely it is) and it must not contain a template
-    // expression. The opening line and its trailing newline chare are removed.
+    // The opening line must be empty (it very likely is) and it must not contain a template
+    // expression. The opening line's trailing newline char is removed.
     if (firstSplit) {
-      // Length > 1 ensures there is a newline, and there is not template expression.
+      // Length > 1 ensures there is a newline, and there is not a template expression.
       if (lines.length === 1 || lines[0].length > 0) {
         throw new Error('invalid content on opening line');
       }
@@ -89,7 +113,7 @@ function process(strings: readonly (string | undefined)[]): readonly (string | u
     // The closing line may only contain whitespace and must not contain a template expression. The
     // closing line and its preceding newline are removed.
     if (lastSplit) {
-      // Length > 1 ensures there is a newline, and there is not template expression.
+      // Length > 1 ensures there is a newline, and there is not a template expression.
       if (lines.length === 1 || nonWhitespace.test(lines[lines.length - 1])) {
         throw new Error('invalid content on closing line');
       }
@@ -99,26 +123,27 @@ function process(strings: readonly (string | undefined)[]): readonly (string | u
     }
 
     // In the first spit, the index 0 is the opening line (which must be empty by now), and in all
-    // other splitQuasis, its the content trailing the template expression (and so can't be part of
+    // other splits, its the content trailing the template expression (and so can't be part of
     // leading whitespace).
     // Every odd index is the captured newline char, so we'll skip and only process evens.
     for (let j = 2; j < lines.length; j += 2) {
-      const line = lines[j];
+      const text = lines[j];
 
       // If we are on the last line of this split, and we are not processing the last split (which
       // is after all template expressions), then this line contains a template expression.
       const lineContainsTemplateExpression = j + 1 === lines.length && !lastSplit;
 
-      const leading = leadingWhitespace.exec(line)!;
+      // leadingWhitespace is guaranteed to match something, but it could be 0 chars.
+      const leading = leadingWhitespace.exec(text)![0];
 
       // Empty lines do not affect the common indentation, and whitespace only lines are emptied
       // (and also don't affect the comon indentation).
-      if (!lineContainsTemplateExpression && leading[0].length === line.length) {
+      if (!lineContainsTemplateExpression && leading.length === text.length) {
         lines[j] = '';
         continue;
       }
 
-      common = commonStart(leading[0], common);
+      common = commonStart(leading, common);
     }
   }
 
@@ -128,7 +153,9 @@ function process(strings: readonly (string | undefined)[]): readonly (string | u
 
     let quasi = lines[0];
     for (let i = 1; i < lines.length; i += 2) {
-      quasi += lines[i] + lines[i + 1].slice(min);
+      const newline = lines[i];
+      const text = lines[i + 1];
+      quasi += newline + text.slice(min);
     }
     return quasi;
   });

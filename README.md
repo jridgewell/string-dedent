@@ -6,9 +6,9 @@ Removes the leading whitespace from each line, allowing you to break the
 string into multiple lines with indentation. If lines have an uneven amount
 of indentation, then only the common whitespace is removed.
 
-If the first or last lines contain only whitespace, they will be removed
-entirely. This allows the opening and closing ``` ` ``` mark to be on their
-own line.
+The opening and closing lines (which contain the ``` ` ``` marks) must be on their own line. The
+opening line must be empty, and the closing line may contain whitespace. The opening and closing
+line will be removed from the output, so that only the content in between remains.
 
 ```js
 const dedent = require('string-dedent');
