@@ -10,11 +10,15 @@
   "module": "dist/dedent.mjs",
   "typings": "dist/types/dedent.d.ts",
   "exports": {
-    ".": {
-      "browser": "./dist/dedent.umd.js",
-      "require": "./dist/dedent.umd.js",
-      "import": "./dist/dedent.mjs"
-    },
+    ".": [
+      {
+        "types": "dist/types/dedent.d.ts",
+        "browser": "./dist/dedent.umd.js",
+        "require": "./dist/dedent.umd.js",
+        "import": "./dist/dedent.mjs"
+      },
+      "./dist/dedent.umd.js"
+    ],
     "./package.json": "./package.json"
   },
   "files": [
