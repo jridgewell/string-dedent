@@ -10,6 +10,13 @@ const leadingWhitespace = /^\s*/;
 const nonWhitespace = /\S/;
 const slice = Array.prototype.slice;
 
+const zero = '0'.charCodeAt(0);
+const nine = '9'.charCodeAt(0);
+const lowerA = 'a'.charCodeAt(0);
+const lowerF = 'f'.charCodeAt(0);
+const upperA = 'A'.charCodeAt(0);
+const upperF = 'F'.charCodeAt(0);
+
 function dedent(str: string): string;
 function dedent(str: TemplateStringsArray, ...substitutions: unknown[]): string;
 function dedent<A extends unknown[], R, T>(tag: Tag<A, R, T>): Tag<A, R, T>;
@@ -47,20 +54,20 @@ function processTemplateStringsArray(strings: TemplateStringsArray): TemplateStr
   const cached = cache.get(strings);
   if (cached) return cached;
 
-  const dedented = process(strings) as TemplateStringsArray;
-  cache.set(strings, dedented);
+  const raw = process(strings.raw);
+  const cooked = raw.map(cook) as unknown as TemplateStringsArray;
 
-  Object.defineProperty(dedented, 'raw', {
-    value: Object.freeze(process(strings.raw)),
+  Object.defineProperty(cooked, 'raw', {
+    value: Object.freeze(raw),
   });
-  Object.freeze(dedented);
+  Object.freeze(cooked);
+  cache.set(strings, cooked);
 
-  return dedented;
+  return cooked;
 }
 
-function process(strings: readonly string[]): readonly string[];
-function process(strings: readonly (string | undefined)[]): readonly (string | undefined)[] {
-  // splitQuasis is now an array of arrays. The inner array is contains text content lines on the
+function process(strings: readonly string[]): readonly string[] {
+  // splitQuasis is an array of arrays. The inner array is contains text content lines on the
   // even indices, and the newline char that ends the text content line on the odd indices.
   // In the first array, the inner array's 0 index is the opening line of the template literal.
   // In all other arrays, the inner array's 0 index is the continuation of the line directly after a
@@ -84,12 +91,11 @@ function process(strings: readonly (string | undefined)[]): readonly (string | u
   //   [" second", "\n", "  third", "\n", ""],
   // ]
   // ```
-  const splitQuasis = strings.map((quasi) => quasi?.split(newline));
+  const splitQuasis = strings.map((quasi) => quasi.split(newline));
 
   let common;
   for (let i = 0; i < splitQuasis.length; i++) {
     const lines = splitQuasis[i];
-    if (lines === undefined) continue;
 
     // The first split is the static text starting at the opening line until the first template
     // expression (or the end of the template if there are no expressions).
@@ -149,8 +155,6 @@ function process(strings: readonly (string | undefined)[]): readonly (string | u
 
   const min = common ? common.length : 0;
   return splitQuasis.map((lines) => {
-    if (lines === undefined) return lines;
-
     let quasi = lines[0];
     for (let i = 1; i < lines.length; i += 2) {
       const newline = lines[i];
@@ -168,6 +172,124 @@ function commonStart(a: string, b: string | undefined): string {
     if (a[i] !== b[i]) break;
   }
   return a.slice(0, i);
+}
+
+function cook(raw: string): string | undefined {
+  let out = '';
+  let start = 0;
+
+  // We need to find every backslash escape sequence, and cook the escape into a real char.
+  let i = 0;
+  while ((i = raw.indexOf('\\', i)) > -1) {
+    out += raw.slice(start, i);
+
+    // If the backslash is the last char of the string, then it was an invalid sequence.
+    // This can't actually happen in a tagged template literal, but could happen if you manually
+    // invoked the tag with an array.
+    if (++i === raw.length) return undefined;
+
+    const next = raw[i++];
+    switch (next) {
+      // Escaped control codes need to be individually processed.
+      case 'b':
+        out += '\b';
+        break;
+      case 't':
+        out += '\t';
+        break;
+      case 'n':
+        out += '\n';
+        break;
+      case 'v':
+        out += '\v';
+        break;
+      case 'f':
+        out += '\f';
+        break;
+      case 'r':
+        out += '\r';
+        break;
+
+      // Escaped line terminators just skip the char.
+      case '\r':
+        // Treat `\r\n` as a single terminator.
+        if (i < raw.length && raw[i] === '\n') ++i;
+      // fall through
+      case '\n':
+      case '\u2028':
+      case '\u2029':
+        break;
+
+      // `\0` is a null control char, but `\0` followed by another digit is an illegal octal escape.
+      case '0':
+        if (isDigit(raw, i)) return undefined;
+        out += '\0';
+        break;
+
+      // Hex escapes must contain 2 hex chars.
+      case 'x': {
+        const n = parseHex(raw, i, i + 2);
+        if (n === -1) return undefined;
+        i += 2;
+        out += String.fromCharCode(n);
+        break;
+      }
+
+      // Unicode escapes contain either 4 chars, or an unlimited number between `{` and `}`.
+      // The hex value must not overflow 0x10ffff.
+      case 'u': {
+        let n;
+        if (i < raw.length && raw[i] === '{') {
+          const end = raw.indexOf('}', ++i);
+          if (end === -1) return undefined;
+
+          n = parseHex(raw, i, end);
+          i = end + 1;
+        } else {
+          n = parseHex(raw, i, i + 4);
+          i += 4;
+        }
+        if (n === -1 || n > 0x10ffff) return undefined;
+
+        out += String.fromCodePoint(n);
+        break;
+      }
+
+      default:
+        if (isDigit(next, 0)) return undefined;
+        out += next;
+    }
+
+    start = i;
+  }
+
+  return out + raw.slice(start);
+}
+
+function isDigit(str: string, index: number): boolean {
+  if (index >= str.length) return false;
+
+  const c = str.charCodeAt(index);
+  return c >= zero && c <= nine;
+}
+
+function parseHex(str: string, index: number, end: number): number {
+  if (end >= str.length) return -1;
+
+  let n = 0;
+  for (; index < end; index++) {
+    const c = hexToInt(str.charCodeAt(index));
+    if (c === -1) return -1;
+    n = n * 16 + c;
+  }
+  return n;
+}
+
+function hexToInt(c: number): number {
+  if (c >= zero && c <= nine) return c - zero;
+  if (c >= lowerA && c <= lowerF) return c - lowerA + 10;
+  if (c >= upperA && c <= upperF) return c - upperA + 10;
+  return -1;
 }
 
 export default dedent;
