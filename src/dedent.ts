@@ -267,8 +267,6 @@ function cook(raw: string): string | undefined {
 }
 
 function isDigit(str: string, index: number): boolean {
-  if (index >= str.length) return false;
-
   const c = str.charCodeAt(index);
   return c >= zero && c <= nine;
 }
