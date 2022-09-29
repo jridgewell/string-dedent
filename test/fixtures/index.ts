@@ -5,12 +5,48 @@ import vm from 'vm';
 
 const { OVERWRITE, GREP } = process.env;
 
+const whitespaceToSymbol: Record<string, string> = {
+  ' ': '\u2420',
+  '·': '\u2420',
+  '-': '\u2409',
+  '\0': '\u2400',
+  '\b': '\u2408',
+  '\t': '\u2409',
+  // We don't want to transform real newlines into the symbol.
+  // '\n': '\u240A',
+  '\v': '\u240B',
+  '\f': '\u240C',
+  '\r': '\u240D',
+  // These don't actually have symbols. :sad:
+  '\u2028': '\u241E',
+  '\u2029': '\u241F',
+};
+
+const symbolToWhitespace: Record<string, string> = {
+  '\u2420': ' ',
+  '·': ' ',
+  '-': '\t',
+  '\u2400': '\0',
+  '\u2408': '\b',
+  '\u2409': '\t',
+  '\u240A': '\n',
+  '\u240B': '\v',
+  '\u240C': '\f',
+  '\u240D': '\r',
+  // These don't actually have symbols. :sad:
+  '\u241E': '\u2028',
+  '\u241F': '\u2029',
+};
+
+const whitespaceRegex = new RegExp(Object.keys(whitespaceToSymbol).join('|'), 'g');
+const symbolRegex = new RegExp(Object.keys(symbolToWhitespace).join('|'), 'g');
+
 function showWhitespace(contents: string, newline = true): string {
-  contents = contents.replace(/ /g, '·').replace(/\t/g, '-');
+  contents = contents.replace(whitespaceRegex, (m) => whitespaceToSymbol[m]);
   return newline ? contents.replace(/^/gm, '^') : contents;
 }
 function hideWhitespace(contents: string): string {
-  return contents.replace(/·/g, ' ').replace(/-/g, '\t');
+  return contents.replace(symbolRegex, (m) => symbolToWhitespace[m]);
 }
 function trailingNewline(contents: string): string {
   return contents.replace(/\n?$/, '\n');
@@ -64,7 +100,7 @@ function runTest(root: string, name: string): void {
       actualError = (e as Error).toString();
     }
 
-    if (/[ \t]/.test(input) || !input.endsWith('\n')) {
+    if (/[ \t·-]/.test(input) || !input.endsWith('\n')) {
       writeFile(inputPath, trailingNewline(showWhitespace(input, false)));
     }
     if (expectedOutput !== undefined && !expectedOutput.endsWith('\n')) {

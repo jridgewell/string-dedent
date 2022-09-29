@@ -1,5 +1,5 @@
 dd`
-··first
-·
-··third
+␠␠first
+␠
+␠␠third
 `

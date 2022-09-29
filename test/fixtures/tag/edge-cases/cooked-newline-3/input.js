@@ -1,4 +1,4 @@
 dd`
-··first
-··second
-··third\n`
+␠␠first
+␠␠second
+␠␠third\n`
