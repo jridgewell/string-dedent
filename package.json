@@ -8,17 +8,22 @@
   ],
   "main": "dist/dedent.umd.js",
   "module": "dist/dedent.mjs",
-  "typings": "dist/types/dedent.d.ts",
+  "types": "./dist/dedent.d.ts",
   "exports": {
-    ".": [
-      {
-        "types": "dist/types/dedent.d.ts",
-        "browser": "./dist/dedent.umd.js",
-        "require": "./dist/dedent.umd.js",
-        "import": "./dist/dedent.mjs"
+    ".": {
+      "import": {
+        "types": "./dist/dedent.d.mts",
+        "default": "./dist/dedent.mjs"
       },
-      "./dist/dedent.umd.js"
-    ],
+      "require": {
+        "types": "./dist/dedent.d.ts",
+        "default": "./dist/dedent.umd.js"
+      },
+      "browser": {
+        "types": "./dist/dedent.d.ts",
+        "default": "./dist/dedent.umd.js"
+      }
+    },
     "./package.json": "./package.json"
   },
   "files": [
@@ -37,6 +42,7 @@
     "build": "run-s -n build:*",
     "build:rollup": "rollup -c rollup.config.ts",
     "build:ts": "tsc --project tsconfig.build.json",
+    "build:fix-npm-types": "mv dist/dedent.d.ts dist/dedent.d.mts && sed 's/export default/export =/' dist/dedent.d.mts > dist/dedent.d.ts",
     "lint": "run-s -n lint:*",
     "lint:prettier": "npm run test:lint:prettier -- --write",
     "lint:ts": "npm run test:lint:ts -- --fix",

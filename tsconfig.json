@@ -10,7 +10,7 @@
     "inlineSources": true,
     "declaration": true,
     "allowSyntheticDefaultImports": true,
-    "declarationDir": "dist/types",
+    "declarationDir": "./dist",
     "typeRoots": ["node_modules/@types"]
   },
   "exclude": ["dist"],
