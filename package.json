@@ -42,7 +42,7 @@
     "build": "run-s -n build:*",
     "build:rollup": "rollup -c rollup.config.ts",
     "build:ts": "tsc --project tsconfig.build.json",
-    "build:fix-npm-types": "mv dist/dedent.d.ts dist/dedent.d.mts && sed 's/export default/export =/' dist/dedent.d.mts > dist/dedent.d.ts",
+    "build:fix-npm-types": "node scripts/fix-npm-types.mjs",
     "lint": "run-s -n lint:*",
     "lint:prettier": "npm run test:lint:prettier -- --write",
     "lint:ts": "npm run test:lint:ts -- --fix",
